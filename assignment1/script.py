@@ -56,12 +56,12 @@ def k_means(image):
 
 # main program
 if __name__ == "__main__":
-    print 'Number of arguments:', len(sys.argv), 'arguments.'
-    print 'Argument List:', str(sys.argv)
+    print ('Number of arguments:', len(sys.argv), 'arguments.')
+    print ('Argument List:', str(sys.argv))
     im = loadImage(sys.argv[1])
     print(im)
     print(image_dimensions)
-    set_cluster_id(499,655,1)
+    set_cluster_id(224,282,1)
     print(cl)
 
 
