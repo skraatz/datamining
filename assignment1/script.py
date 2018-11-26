@@ -30,6 +30,11 @@ def load_image(path):
 
 
 def flatten_image(image):
+    """
+    turn image into list of [r,g,b]
+    :param image:
+    :return:
+    """
     x_w, y_w = image.width, image.height
     data = list()
     for x in range(0, x_w):
@@ -40,6 +45,13 @@ def flatten_image(image):
 
 
 def unflatten_image(image, clustering, k):
+    """
+    recolor image based on cluster id
+    :param image: Pillow image, that was worked on
+    :param clustering:
+    :param k: max cluster_id -1
+    :return: the colored version of the image
+    """
     x_w, y_w = image.width, image.height
     colors = get_spaced_colors(k)
     list_pos = 0
