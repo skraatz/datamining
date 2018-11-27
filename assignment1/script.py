@@ -3,18 +3,18 @@
 import sys, math, numpy, random
 from PIL import Image
 
-image_dimensions = (0,0)
+image_dimensions = (0, 0)
 
 # k-means parameter
-max_centeroid_distance = 40
+max_centeroid_distance = 20
 max_iterations = 10
 k_partitions = 8
 
 # dbscan parameters
-eps             = 10
-minpoints       = 10
-NOISE           = 0
-UNCLASSIFIED    = -1
+eps = 10
+minpoints = 10
+NOISE = 0
+UNCLASSIFIED = -1
 
 # general paramaters
 outpath = "output.bmp"
@@ -58,8 +58,7 @@ def unflatten_image(image, clustering, k):
     for x in range(0, x_w):
         for y in range(0, y_w):
             cluster_id = clustering[list_pos]
-            color = colors(cluster_id)
-            set_rgb_color(image, x, y, color)
+            set_rgb_color(image, x, y, colors[cluster_id])
             list_pos += 1
     return image
 
@@ -79,9 +78,9 @@ def set_rgb_color(image, x, y, (r, g, b)):
 def euklidian_dist(point_a, point_b):
     r_a, g_a, b_a = point_a
     (r_b, g_b, b_b), clid = point_b
-    total = math.pow(r_a-r_b,2)
-    total += math.pow(g_a-g_b,2)
-    total += math.pow(b_a-b_b,2)
+    total = math.pow(r_a - r_b, 2)
+    total += math.pow(g_a - g_b, 2)
+    total += math.pow(b_a - b_b, 2)
     return math.sqrt(total), clid
 
 
@@ -105,105 +104,135 @@ def get_spaced_colors(n):
     colors = [hex(I)[2:].zfill(6) for I in range(0, max_value, interval)]
     return [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
 
+
+def random_centeroid(normalizer, cluster_id):
+    random_center = tuple(
+        random.randint(0, value) for value in normalizer
+    )
+    return (random_center, cluster_id)
+
+
 ########################################################################################################################
 
 
-def k_means(image, k):
-    clustering = numpy.empty(image_dimensions, dtype=int)
-    x_w, y_w = image_dimensions
+def k_means_generic(data, k):
+    """
+    returns clustering in the same order
+    as the provided data vectors
+    :param data: list of data vector
+    :param k: k-means parameter
+    :return: list of cluster ids
+    """
+    clustering = list()  # list of cluster_ids
 
+    normalizer = list()  # store max values for initial center calculation
+    for init in range(len(data[0])):
+        normalizer.append(0)
+
+    print("calculating max values for initial center vectors")
+    for datapoint in data:
+        clustering.append(0)  # assign each data point to cluster 0 initially
+        for value in range(len(data[0])):
+            normalizer[value] = max(normalizer[value], datapoint[value])
+
+    print("choosing initial centers")
     # chose k points as center
     new_centers = list()
     old_centers = list()
 
     for cluster_id in range(0, k):
-        # get random point? may result in equal color points
-        random_color = (
-                random.randint(0, 255),     # red value
-                random.randint(0, 255),     # green value
-                random.randint(0, 255)      # blue value
-        )
-        new_centers.append((random_color, cluster_id))
+        new_centers.append(random_centeroid(normalizer, cluster_id))
+    print ("initial centers:")
+    for center in new_centers:
+        print(center)
 
-    changed = True
+    print("starting k-means algorithm")
+
+    running = True
     iterations = 0
-    while changed and iterations < max_iterations:
-        iterations += 1
-        print("step 1: assigning pixels to clusters")
-        changed = False
-        # iterate over all points
-        for x in range(0, x_w ):
-            for y in range(0, y_w ):
-                start_center = new_centers[0]
-                d_min = euklidian_dist(get_rgb_color(image, x, y), start_center)
+    while running:
+        running = False
+        print("iteration step :" + str(iterations))
 
-                current_cluster = clustering[x, y]
-                # compute distance to all centers
-                for center in new_centers:
-                    d, clid = euklidian_dist(get_rgb_color(image, x, y), center)
-                    if d < d_min:
-                        d_min = d
-                        # set cluster_id as closest cluster
-                        if current_cluster != clid:
-                            clustering[x, y] = clid
-                            changed = True
-         # calculate new centeroids
-        print("step 2: calculating new centeroids")
-        summator = dict()
-        for cluster_id in range(0,k):
-            sum = dict()
-            sum["r"] = 0
-            sum["g"] = 0
-            sum["b"] = 0
-            sum["total"] = 0
-            summator[str(cluster_id)] = sum
+        print("assigning closest centeroid")
+        # iterate over data points
+        for point_index in range(len(data)):
+            datapoint = data[point_index]
+            current_cluster_id = clustering[point_index]
+            current_center, cluster_id = new_centers[current_cluster_id]
+            dist_min = euklidian_dist_generic(datapoint, current_center)
+            for center, cluster_id in new_centers:
+                new_dist = euklidian_dist_generic(datapoint, center)
+                if new_dist < dist_min:  # data point is closer to other center
+                    clustering[point_index] = cluster_id  # assign new cluster_id
+                    dist_min = new_dist  # new minimal distance
 
-        for x in range(0, x_w):
-            for y in range(0, y_w):
-                cluster_id = clustering[x, y]
-                r, g, b = get_rgb_color(image, x, y)
-                summator[str(cluster_id)]["r"] += r
-                summator[str(cluster_id)]["g"] += g
-                summator[str(cluster_id)]["b"] += b
-                summator[str(cluster_id)]["total"] += 1
+        print("recalculating centeroids")
+        # calculate new centeroids
 
         del old_centers[:]
         old_centers += new_centers
         del new_centers[:]
-        for cluster_id in range(0,k):
-            if summator[str(cluster_id)]["total"] > 0:
-                new_center = (
-                    summator[str(cluster_id)]["r"]/summator[str(cluster_id)]["total"],
-                    summator[str(cluster_id)]["g"]/summator[str(cluster_id)]["total"],
-                    summator[str(cluster_id)]["b"]/summator[str(cluster_id)]["total"]
-                    )
-                new_centers.append((new_center, cluster_id))
 
-        # centroid distance
-        # stop criteria: |(old - new)| < max_centeroid_distance
-        threshold_exceeded = False
-        for old_center, old_cluster_id in old_centers:
-            for new_center, new_cluster_id in new_centers:
-                if old_cluster_id == new_cluster_id:
-                    center_distance, cluster_id = euklidian_dist(old_center, (new_center, new_cluster_id))
-                    if center_distance > max_centeroid_distance:
-                        threshold_exceeded = True
-        if not threshold_exceeded:
-            changed = False
-        print("Iteration step: " + str(iterations))
+        # finding average for each vector value
+        sums = list()
+        for i in range(k):
+            sums.append(
+                (list(
+                    0 for value in range(0, len(data[0]))
+                ), 0)
+            )
 
-    colors = get_spaced_colors(k)
-    for x in range(0, x_w):
-        for y in range(0, y_w):
-            set_rgb_color(image, x, y, colors[clustering[x, y]])
+        for point_index in range(len(data)):
+            datapoint = data[point_index]
+            cluster_id = clustering[point_index]
+            # vector to sum for center calculation
+            sum, counter = sums[cluster_id]
+            for i, value in enumerate(datapoint):
+                sum[i] += value
+            counter += 1
+            sums[cluster_id] = sum, counter
 
-    return image
+        for cluster_id in range(k):
+            sum, counter = sums[cluster_id]
+            # print (sum, counter)
+            if counter == 0:
+                new_centers.append(random_centeroid(normalizer, cluster_id))
+            else:
+                center = tuple(
+                    value / counter for value in sum
+                )
+                # print (center)
+            new_centers.append((center, cluster_id))
+        print(new_centers)
+
+        print("calculating maximum center distance")
+        dist = 0
+        for i in range(k):
+            oc, ocid = old_centers[i]
+            nc, ncid = new_centers[i]
+            # print(oc)
+            # print(nc)
+            old_dist = euklidian_dist_generic(oc, nc)
+            dist = max(dist, old_dist)
+            print(i, ":", old_dist)
+
+        # check for exit conditions
+        if dist > max_centeroid_distance:
+            running = True
+
+        iterations += 1
+        if iterations >= max_iterations:
+            running = False
+
+    return clustering
+
 
 ########################################################################################################################
 
 
 class Pixel:
-    def __init__(self, color, xy, cluster_id = UNCLASSIFIED):
+    def __init__(self, color, xy, cluster_id=UNCLASSIFIED):
         self.color = color
         x, y = xy
         self.x = x
@@ -264,11 +293,11 @@ def expand_cluster(pixel_set, start_pixel, cluster_id, epsilon, min_pts):
         print("assigning")
         assign_cluster(pixel, cluster_id)
         # remove start_pixel from seeds
-        while len(seeds)>0:
-            o = seeds.pop(0)        # take first pixel in list
+        while len(seeds) > 0:
+            o = seeds.pop(0)  # take first pixel in list
             print(o)
             n = neighbourhood(pixel_set, o, epsilon)
-            if len(n) > min_pts:    # o is core object
+            if len(n) > min_pts:  # o is core object
                 for p in n:
                     if p.cluster_id == UNCLASSIFIED or p.cluster_id == NOISE:
                         assign_cluster(p, cluster_id)
@@ -284,7 +313,7 @@ def dbscan(image, epsilon, min_pts):
     # flatten image
     for x in range(0, x_w):
         for y in range(0, y_w):
-            pixel = Pixel(get_rgb_color(image, x, y),(x, y))
+            pixel = Pixel(get_rgb_color(image, x, y), (x, y))
             pixels.append(pixel)
 
     cluster_id = next_id(NOISE)
@@ -294,25 +323,26 @@ def dbscan(image, epsilon, min_pts):
             if expand_cluster(pixels, pixel, cluster_id, epsilon, min_pts):
                 cluster_id = next_id(cluster_id)
 
-    colors = get_spaced_colors(k)
+    colors = get_spaced_colors(cluster_id)
     for pixel in pixels:
         set_rgb_color(image, pixel.x, pixel.y, colors[pixel.cluster_id])
 
     return image
+
 
 ########################################################################################################################
 
 
 # main program
 if __name__ == "__main__":
-
     # print ('Number of arguments:', len(sys.argv), 'arguments.')
     # print ('Argument List:', str(sys.argv))
     input_image = load_image(sys.argv[1])
     print("image dimensions = " + str(image_dimensions))
-
-    #output_image = k_means(input_image, k_partitions)
-    output_image = dbscan(input_image, 10, 10)
+    data = flatten_image(input_image)
+    clustering = k_means_generic(data, k_partitions)
+    output_image = unflatten_image(input_image, clustering, k_partitions)
     save_image(output_image, outpath)
-
-
+    # output_image = k_means(input_image, k_partitions)
+    # output_image = dbscan(input_image, 10, 10)
+    # save_image(output_image, outpath)
