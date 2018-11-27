@@ -21,7 +21,7 @@ NOISE = 0
 UNCLASSIFIED = -1
 
 # general paramaters
-outpath = "output.bmp"
+outpath = "output/output.bmp"
 outformat = "BMP"
 
 
@@ -40,6 +40,6 @@ if __name__ == "__main__":
 
     clustering = k_means(data, K_PARTITIONS, MAX_CENTEROIDS_DISTANCE, MAX_ITERATIONS)
     output_image = unflatten_image(input_image, clustering, K_PARTITIONS)
-    save_image(output_image, outpath)
+    save_image(output_image, outpath, outformat)
 
     # output_image = dbscan(input_image, 10, 10)
