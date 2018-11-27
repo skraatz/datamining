@@ -1,4 +1,4 @@
-# datatmining assignment usage guide
+# datamining assignment usage guide
 * clone this project
 * for assignment1
 ```
