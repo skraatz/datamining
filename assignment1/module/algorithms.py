@@ -142,6 +142,71 @@ def k_means(data, k_partitions=8, max_centeroid_distance=20, max_iterations=10):
 
 ########################################################################################################################
 
+NOISE = 0
+UNCLASSIFIED = -1
+
+
+def next_id(current):
+    return current + 1
+
+
+def neighbourhood(data, data_point_number, epsilon):
+    # print("gathering neighbourhood for ", data[data_point_number])
+    neighbours = list()
+    for i in range(len(data)):
+        if i != data_point_number:
+            pot_neighbour = data[i]
+            # print("potential neighbour ", pot_neighbour)
+            if euklidian_dist_generic(data[data_point_number], pot_neighbour) < epsilon:
+                neighbours.append((data[i], i))
+    return neighbours
+
+
+def expand_cluster(data, clustering, point_counter, cluster_id, epsilon, min_pts):
+    print("preparing neighbours")
+    seeds = neighbourhood(data, point_counter, epsilon)
+    if len(seeds) < min_pts:
+        print("pixel is noise")
+        clustering[point_counter] = NOISE
+        return False
+    for data_point, position in seeds:
+        print("assigning")
+        clustering[position] = cluster_id
+        while len(seeds) > 0:
+            print ("seed length", len(seeds))
+            o, position = seeds.pop(0)  # take first pixel in list
+            n = neighbourhood(data, position, epsilon)
+            if len(n) > min_pts:  # o is core object
+                for p, pos in n:
+                    if clustering[pos] in [UNCLASSIFIED, NOISE]:
+                        if clustering[pos] == UNCLASSIFIED and not (p, pos) in seeds:
+                            seeds.append((p, pos))
+                        clustering[pos] = cluster_id
+            # remove done by pop operation
+    return True
+
+
+def dbscan(data, epsilon, min_pts):
+    """
+    db scan algorithm
+    :param data: list of tupels
+    :param epsilon: epsilon distance
+    :param min_pts: minimal count of points in epsilon distance
+    :return:
+    """
+    clustering = [UNCLASSIFIED] * len(data)
+    cluster_id = next_id(NOISE)
+
+    for point_counter in range(len(data)):
+        if clustering[point_counter] == UNCLASSIFIED:
+            if expand_cluster(data, clustering, point_counter, cluster_id, epsilon, min_pts):
+                cluster_id = next_id(cluster_id)
+
+    # end of old script
+    return clustering
+
+
+
 """
 class Pixel:
     def __init__(self, color, xy, cluster_id=UNCLASSIFIED):
@@ -167,8 +232,6 @@ def default_pixel():
     return Pixel((1, 1, 1), (2, 2), -1)
 
 
-def next_id(current):
-    return current + 1
 
 
 def neighbourhood(pixel_set, pixel, epsilon):

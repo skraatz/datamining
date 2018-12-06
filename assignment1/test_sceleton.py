@@ -4,7 +4,7 @@ import sys, math, numpy, random, os
 from PIL import Image
 
 sys.path.append(os.getcwd()+"/module")
-from algorithms import k_means
+from algorithms import k_means, dbscan
 from imagefunctions import *
 
 image_dimensions = (0, 0)
@@ -27,19 +27,13 @@ outformat = "BMP"
 
 ########################################################################################################################
 
-
-
-
-########################################################################################################################
-
-
 # main program
 if __name__ == "__main__":
     input_image = load_image(sys.argv[1])
     data = flatten_image(input_image)
 
-    clustering = k_means(data, K_PARTITIONS, MAX_CENTEROIDS_DISTANCE, MAX_ITERATIONS)
+    #clustering = k_means(data, K_PARTITIONS, MAX_CENTEROIDS_DISTANCE, MAX_ITERATIONS)
+    clustering = dbscan(data, eps, minpoints)
     output_image = unflatten_image(input_image, clustering, K_PARTITIONS)
     save_image(output_image, outpath, outformat)
 
-    # output_image = dbscan(input_image, 10, 10)
