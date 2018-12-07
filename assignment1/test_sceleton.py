@@ -36,4 +36,5 @@ if __name__ == "__main__":
     clustering = dbscan(data, eps, minpoints)
     output_image = unflatten_image(input_image, clustering, K_PARTITIONS)
     save_image(output_image, outpath, outformat)
+    print ("image written to " + outpath)
 

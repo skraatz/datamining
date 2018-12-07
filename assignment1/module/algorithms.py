@@ -1,4 +1,4 @@
-import math, random
+import math, random, sys
 
 
 def euklidian_dist_generic(point_a, point_b):
@@ -163,17 +163,17 @@ def neighbourhood(data, data_point_number, epsilon):
 
 
 def expand_cluster(data, clustering, point_counter, cluster_id, epsilon, min_pts):
-    print("preparing neighbours")
+    # print("preparing neighbours")
     seeds = neighbourhood(data, point_counter, epsilon)
     if len(seeds) < min_pts:
-        print("pixel is noise")
+        # print("data point is noise")
         clustering[point_counter] = NOISE
         return False
     for data_point, position in seeds:
-        print("assigning")
+        # print("assigning")
         clustering[position] = cluster_id
         while len(seeds) > 0:
-            print ("seed length", len(seeds))
+            #print ("seed length", len(seeds))
             o, position = seeds.pop(0)  # take first pixel in list
             n = neighbourhood(data, position, epsilon)
             if len(n) > min_pts:  # o is core object
@@ -197,10 +197,10 @@ def dbscan(data, epsilon, min_pts):
     clustering = [UNCLASSIFIED] * len(data)
     cluster_id = next_id(NOISE)
 
+    total = len(data)
     for point_counter in range(len(data)):
+        print(str(total-point_counter) + " datapoints remaining")
         if clustering[point_counter] == UNCLASSIFIED:
             if expand_cluster(data, clustering, point_counter, cluster_id, epsilon, min_pts):
                 cluster_id = next_id(cluster_id)
-
-    # end of old script
     return clustering
