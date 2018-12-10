@@ -15,6 +15,24 @@ def euklidian_dist_generic(point_a, point_b):
     return math.sqrt(total)
 
 
+def max_dist_generic(point_a, point_b):
+    """
+    takes two equal length lists (data points)
+    :param point_a:
+    :param point_b:
+    :return: metric maximum distance between data points
+    """
+    assert (len(point_a) == len(point_b))
+    dist = 0
+    for flag in range(len(point_a)):
+        nextdist = abs(point_a[flag] - point_b[flag])
+        dist = max(dist, nextdist)
+    return dist
+
+
+# dist_func = max_dist_generic
+
+
 def random_centeroid(normalizer, cluster_id):
     """
     returns a centeroid in the range of max values specified by normalizer
@@ -150,43 +168,45 @@ def next_id(current):
     return current + 1
 
 
-def neighbourhood(data, data_point_number, epsilon):
+def neighbourhood(data, data_point_number, epsilon, distfunc = euklidian_dist_generic):
     # print("gathering neighbourhood for ", data[data_point_number])
     neighbours = list()
     for i in range(len(data)):
         if i != data_point_number:
             pot_neighbour = data[i]
             # print("potential neighbour ", pot_neighbour)
-            if euklidian_dist_generic(data[data_point_number], pot_neighbour) < epsilon:
+            # if euklidian_dist_generic(data[data_point_number], pot_neighbour) < epsilon:
+            if distfunc(data[data_point_number], pot_neighbour) < epsilon:
                 neighbours.append((data[i], i))
     return neighbours
 
 
-def expand_cluster(data, clustering, point_counter, cluster_id, epsilon, min_pts):
+def expand_cluster(data, clustering, point_counter, cluster_id, epsilon, min_pts, distfunc):
     # print("preparing neighbours")
-    seeds = neighbourhood(data, point_counter, epsilon)
+    seeds = neighbourhood(data, point_counter, epsilon, distfunc)
+    print("neighbours: " + str(len(seeds)))
     if len(seeds) < min_pts:
         # print("data point is noise")
         clustering[point_counter] = NOISE
         return False
-    for data_point, position in seeds:
-        # print("assigning")
-        clustering[position] = cluster_id
-        while len(seeds) > 0:
-            #print ("seed length", len(seeds))
-            o, position = seeds.pop(0)  # take first pixel in list
-            n = neighbourhood(data, position, epsilon)
-            if len(n) > min_pts:  # o is core object
-                for p, pos in n:
-                    if clustering[pos] in [UNCLASSIFIED, NOISE]:
-                        if clustering[pos] == UNCLASSIFIED and not (p, pos) in seeds:
-                            seeds.append((p, pos))
-                        clustering[pos] = cluster_id
+    # assign all neighbours the same cluster id
+    for dp, pos in seeds :
+        clustering[pos] = cluster_id
+    while len(seeds) > 0:
+        o, position = seeds.pop(0)
+        n = neighbourhood(data, position, epsilon, distfunc)
+        if len(n) > min_pts:  # o is core object
+            for p, pos in n:
+                if clustering[pos] > NOISE:
+                    continue
+                clustering[pos] = cluster_id
+                if clustering[pos] == UNCLASSIFIED:
+                    seeds.append((p, pos))
             # remove done by pop operation
     return True
 
 
-def dbscan(data, epsilon, min_pts):
+def dbscan(data, epsilon, min_pts, distfunc = euklidian_dist_generic):
     """
     db scan algorithm
     :param data: list of tupels
@@ -201,6 +221,35 @@ def dbscan(data, epsilon, min_pts):
     for point_counter in range(len(data)):
         print(str(total-point_counter) + " datapoints remaining")
         if clustering[point_counter] == UNCLASSIFIED:
-            if expand_cluster(data, clustering, point_counter, cluster_id, epsilon, min_pts):
+            if expand_cluster(data, clustering, point_counter, cluster_id, epsilon, min_pts, distfunc):
                 cluster_id = next_id(cluster_id)
     return clustering
+
+
+def dbscan_wikipedia(data, epsilon, min_pts):
+    clustering = [UNCLASSIFIED] * len(data)
+    cluster_id = next_id(NOISE)
+    
+    total = len(data)
+    for point_counter in range(len(data)):
+        if point_counter % 10 == 0:
+            print(str(total-point_counter) + " datapoints remaining")
+        if clustering[point_counter] == UNCLASSIFIED:               # /* Previously processed in inner loop */
+            seeds = neighbourhood(data, point_counter, epsilon)     # /* Find neighbors */
+            if len(seeds) < min_pts:                                # /* Density check, expand cluster is false/
+                clustering[point_counter] = NOISE                   # /* Label as Noise */
+            else:
+                cluster_id = next_id(cluster_id)
+                clustering[point_counter] = cluster_id
+                while len(seeds) < 0:
+                    data_point, position = seeds.pop(0)
+                    if clustering[position] == NOISE:
+                        clustering[position] = cluster_id
+                    if clustering[position] == UNCLASSIFIED:
+                        clustering[position] = cluster_id
+                        neigh = neighbourhood(data, position, epsilon)
+                        if len(neigh) >= min_pts:
+                            seeds += neigh
+    return clustering
+
+

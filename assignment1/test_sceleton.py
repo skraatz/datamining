@@ -4,7 +4,7 @@ import sys, math, numpy, random, os
 from PIL import Image
 
 sys.path.append(os.getcwd()+"/module")
-from algorithms import k_means, dbscan
+from algorithms import * # k_means, dbscan, dbscan_wikipedia
 from imagefunctions import *
 
 image_dimensions = (0, 0)
@@ -28,10 +28,10 @@ outformat = "BMP"
 def printhelp():
     helpstring = "script usage: python test_sceleton.py imagefile <algorithm> <alg_parms>\n"
     helpstring = helpstring + "\t\t\t <algorithm>: \teither <d> for dbscan or <k> for k-means\n"
-    helpstring = helpstring + "\t\t\t <alg_parms>: \t* dbscan : epsilon: int value, min_pts: int value\n"
-    helpstring = helpstring + "\t\t\t\t\t\t\t* k-means : k: int value\n"
+    helpstring = helpstring + "\t\t\t <alg_parms>: \t* dbscan : epsilon: int value, min_pts: int value, distance_function 'e' or 'm'\n"
+    helpstring = helpstring + "\t\t\t\t\t* k-means : k: int value\n"
     helpstring = helpstring + "example 1: python test_sceleton.py inputimage.jpg k 5\n"
-    helpstring = helpstring + "example 2: python test_sceleton.py inputimage.jpg d 10 20\n"
+    helpstring = helpstring + "example 2: python test_sceleton.py inputimage.jpg d 10 20 e\n"
 
     print(helpstring)
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
                 printhelp()
         else:
             if sys.argv[2] == "d":
-                if len(sys.argv) != 5:
+                if len(sys.argv) != 6:
                     print("ERROR: not enough arguments\n")
                     printhelp()
                 else:
@@ -68,12 +68,19 @@ if __name__ == "__main__":
                     if (epsilon not in range(EPSILON_MAX+1)) or (min_pts not in range(MIN_PTS_MAX+1)):
                         printhelp()
                     else:
-                        clustering = dbscan(data, epsilon, min_pts)
-                        # identify number of martitions
-                        print ("counting found partitions")
-                        for cluster_id in clustering:
-                            K_PARTITIONS = max(K_PARTITIONS, cluster_id)
+                        df = sys.argv[5]
+                        if df not in ['e', 'm']:
+                            printhelp()
+                        else:
+                            if df == 'e':
+                                dist_func = euklidian_dist_generic
+                            clustering = dbscan(data, epsilon, min_pts)
+                            # identify number of martitions
+                            print ("counting found partitions")
+                            for cluster_id in clustering:
+                                K_PARTITIONS = max(K_PARTITIONS, cluster_id)
                             K_PARTITIONS += 1
+                            print(str(K_PARTITIONS) + " partitions found")
             else:
                 print("ERROR: unknown option:", sys.argv[2], "\n")
     if len(clustering) == len(data) and len(data) > 0:

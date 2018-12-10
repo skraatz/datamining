@@ -1,5 +1,6 @@
 # datamining assignment usage guide
 * clone this project
+* assignment was solved using python 2.7.15
 * for assignment1
 ```
 cd datamining
@@ -19,8 +20,8 @@ pip install numpy, Pillow
 ```
 script usage: python test_sceleton.py imagefile <algorithm> <alg_parms>
                          <algorithm>:   either <d> for dbscan or <k> for k-means
-                         <alg_parms>:   * dbscan : epsilon: int value, min_pts: int value
+                         <alg_parms>:   * dbscan : epsilon: int value, min_pts: int value, distance_function 'e' or 'm'
                                         * k-means : k: int value
 example 1: python test_sceleton.py inputimage.jpg k 5
-example 2: python test_sceleton.py inputimage.jpg d 10 20
+example 2: python test_sceleton.py inputimage.jpg d 10 20 e
 ```
