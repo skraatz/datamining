@@ -1,10 +1,9 @@
 #!/usr/local/bin/python
 
-import sys, math, numpy, random, os
-from PIL import Image
-
+import sys,os
 sys.path.append(os.getcwd()+"/module")
-from algorithms import * # k_means, dbscan, dbscan_wikipedia
+
+from algorithms import *
 from imagefunctions import *
 
 image_dimensions = (0, 0)
