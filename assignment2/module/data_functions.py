@@ -1,4 +1,5 @@
 import numpy
+import pandas as pd
 
 
 def load_data(filename_classes, filename_features):
@@ -6,8 +7,9 @@ def load_data(filename_classes, filename_features):
     class_data = numpy.loadtxt(open(filename_classes, "rb"), delimiter=";", dtype=numpy.dtype('U20'), skiprows=1,
                                usecols=1)
 
-    print("loading features")  # keep in the index column
-    feature_data = numpy.loadtxt(open(filename_features, "rb"), delimiter=";", dtype=int, skiprows=1)
+    print("loading features")
+    # dataset = pd.read_csv(filename_features, delimiter=';', skiprows=1, )
+    feature_data = numpy.loadtxt(open(filename_features, "rb"), delimiter=";", dtype=int, skiprows=1, usecols=range(1, 81))
 
     # create set of class labels
     class_labels = list(set(class_data.tolist()))
@@ -22,7 +24,8 @@ def load_data(filename_classes, filename_features):
     for entry in class_data:
         class_assignments.append(class_dict[entry])
 
-    return class_assignments, class_dict, class_labels, feature_data
+    # return class_assignments, class_dict, class_labels, feature_data
+    return feature_data, class_assignments, class_labels
 
 
 def prepare_data(data, target, target_names, count):
