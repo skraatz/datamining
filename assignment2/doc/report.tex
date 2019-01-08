@@ -1,0 +1,42 @@
+\documentclass[10pt,a4paper]{proc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\author{Stefan Kraatz}
+\title{Assignment 2}
+\begin{document}
+\maketitle
+\section{task description}
+This experiment targets the influence of the amount of training data on the accuracy of a predefined classification algorithm. For this purpose the nearest neighbour algorithm was chosen. The parameter for this algorithm, besides the selection of training data are:
+\begin{itemize}
+\item the amount of neighbours considered
+\item the cost function, that determines the weight of the nearest neighbours
+\end{itemize}
+The amount of training data to be used in this experiment is 3, 5, 10 members of each class. The feature vector consists of the image edge histogram data for each image and thus represents the shapes displayed on each image. Therefore using it as a class discriminator seems like a logical choice and has been attempted previously (e.g. in \cite{4610973})
+\section{experiment setup}
+\subsection*{implementation laguage and libraries}
+As an implementation language for this experiment, python was used. The choice was mainly influenced by the availability of many data mining functions, implemented in the well known scikit learn library. Besides scikit learn, the following auxiliary libraries where used, mainly due to dependencies of scikit learn and for ease of use in data handling: pandas and numpy.
+\subsection*{test data selection}
+The strategy for selecting the test data is yet to be improved, as of now, the first n representatives of each class where selected. However, removing all class representatives, that do not have enough (at least 3) nearest neighbours in the same class prior to the selection of the first n, greatly improved the result (see \ref{substune}).
+\subsection*{execution}
+The number of neighbours was gradually increased for each given amount of training data and the effect of distance based weight for the neighbour class was tested. Thus the parameter set for each test run was.
+\begin{itemize}
+\item the amount of training data
+\item the amount of neighbours
+\item the cost function (distance based bias or unbiased)
+\end{itemize}
+Each test run was initially executed 10 times. Due to the nature of the chosen algorithm, this did not yield varying results per repetition, and thus results for them were not recorded individually.
+\subsection{variations and tuning}\label{substune}
+\paragraph*{feature reduction}
+After initial test runs, it was decided to also evaluate the influence of the amount of feature points, that were used for test. For reducing the feature vectors to the optimal set of feature points, the principal component analysis was used \cite{wold1987principal}. This proved to be a very strong influence on the accuracy, as dimensions that did not contribute enough to the GINI index? were removed.
+\paragraph*{test data selection}
+After identifiying the relationship between the amount of training data and the value for \texttt{k} and therefore determining the best \texttt{k} for each \texttt{n} the highest accuracy achieved was around 50\%. However this result was only achieved by increasing \texttt{n} far beyond the numbers given in the task description. Therefore a suitable strategy for selecting the best \texttt{n} class members was desired. Research into this topic revealed, that there exists a broad range of instance selection techniques \cite{arnaiz2018estudio}, that aim to improve the quality of the test data selection and therefore also the classification accuracy. Since the classification technique of choice was the KNN Algorithm, it seemed logical to use the Edited Nearest Neighbour Algorithm for the instance selection. This algorithm only considers those data points as representative for a class, that have their closest (configurable) neighbours in the same class. Using this approach, accuracy was boosted up to 90\% for \texttt{n=10}.
+\onecolumn
+\section{results}
+\subsection*{without any tuning}
+\twocolumn
+\section{evaluation}
+\bibliography{cite}
+\bibliographystyle{ieeetr}
+\end{document}

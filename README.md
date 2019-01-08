@@ -25,3 +25,18 @@ script usage: python test_sceleton.py imagefile <algorithm> <alg_parms>
 example 1: python test_sceleton.py inputimage.jpg k 5
 example 2: python test_sceleton.py inputimage.jpg d 10 20 e
 ```
+* for assignment2
+```
+cd datamining
+virtualenv assignment2 --system-site-packages
+
+cd assignment2
+# for ksh:
+. bin/activate
+
+# for bash, etc
+source bin/activate
+
+pip install numpy, pandas, scikit-learn, scipy,  imbalanced-learn, 
+
+```
