@@ -1,6 +1,16 @@
 bin
+*.core
 include
 lib
 pip-selfcheck.json
 *.pdf
 *.PDF
+*.log
+*.gz
+*.png
+*.tex
+*.aux
+*.bbl
+*.dvi
+*.blg
+*.bak
