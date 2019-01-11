@@ -2,7 +2,14 @@ import numpy
 from imblearn.under_sampling import EditedNearestNeighbours
 
 
-def load_data(filename_classes, filename_features, with_enn=False):
+def load_data(filename_classes, filename_features, with_enn=False, denoise=False):
+    """
+    loads data from data files
+    :param filename_classes:
+    :param filename_features:
+    :param with_enn:
+    :return: data rows, targets for training and test
+    """
     print("loading classes")
     class_data = numpy.loadtxt(open(filename_classes, "rb"), delimiter=";", dtype=numpy.dtype('U20'), skiprows=1,
                                usecols=1)
@@ -29,19 +36,25 @@ def load_data(filename_classes, filename_features, with_enn=False):
         print("ENN: cleaning up data for instance selection")
         enn = EditedNearestNeighbours(return_indices=True)
         data_resampled, target_resampled, sample_indices = enn.fit_resample(feature_data, class_assignments)
-        return feature_data, class_assignments, class_labels, sample_indices
+        if denoise:
+            # do not return any data points considered noise by enn
+            return data_resampled, target_resampled, class_labels, sample_indices
+        else:
+            return feature_data, class_assignments, class_labels, sample_indices
     else:
         return feature_data, class_assignments, class_labels, list()
 
 
 def prepare_data(data, target, target_names, indices, count):
     """
-    prepares count data members per class as training data, the rest as
+    prepares count data members per class as training data, the rest as test data
+    if there is a nonempty list of indices present, only members of this list will
+    be considered as "good" training data
     :param data: the feature data
     :param target: the class assignments
     :param target_names: list of class labels
     :param indices: the list of indices of representative candidates
-    :param count:
+    :param count: the number of members per class to be selected as training data
     :return:
     """
     print ("preparing the data")
@@ -54,6 +67,7 @@ def prepare_data(data, target, target_names, indices, count):
 
     class_counter = [0] * len(target_names)
     if len(indices) > 0:
+        print ("indices list is present")
         for feature in data:
             element_class = target[position_counter]
             # only consider entry as training representative, if it was previously in the cleaned up section
@@ -67,6 +81,7 @@ def prepare_data(data, target, target_names, indices, count):
             position_counter += 1
         return test_data, test_target, training_data, training_target
     else:
+        print ("indices list is empty")
         for feature in data:
             element_class = target[position_counter]
             if class_counter[element_class] < count:

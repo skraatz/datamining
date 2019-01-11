@@ -3,6 +3,9 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{caption}
+\usepackage{graphicx}
+\usepackage[section]{placeins}
 \author{Stefan Kraatz}
 \title{Assignment 2}
 \begin{document}
@@ -29,14 +32,52 @@ The number of neighbours was gradually increased for each given amount of traini
 Each test run was initially executed 10 times. Due to the nature of the chosen algorithm, this did not yield varying results per repetition, and thus results for them were not recorded individually.
 \subsection{variations and tuning}\label{substune}
 \paragraph*{feature reduction}
-After initial test runs, it was decided to also evaluate the influence of the amount of feature points, that were used for test. For reducing the feature vectors to the optimal set of feature points, the principal component analysis was used \cite{wold1987principal}. This proved to be a very strong influence on the accuracy, as dimensions that did not contribute enough to the GINI index? were removed.
+\begin{figure}[htbp]
+\includegraphics[scale=0.4]{../output/pca_tune.png}
+\caption{influence of \# num features}
+\label{fig:numfeatures}
+\end{figure}
+After initial test runs, it was decided to also evaluate the influence of the amount of feature points, that were used for testing. For reducing the feature vectors to the optimal set of feature points, the principal component analysis was used \cite{wold1987principal}. The useful number of features was evaluated with 10 members per class for training the classifier and the achieved accuracy for this observed. 
 \paragraph*{test data selection}
-After identifiying the relationship between the amount of training data and the value for \texttt{k} and therefore determining the best \texttt{k} for each \texttt{n} the highest accuracy achieved was around 50\%. However this result was only achieved by increasing \texttt{n} far beyond the numbers given in the task description. Therefore a suitable strategy for selecting the best \texttt{n} class members was desired. Research into this topic revealed, that there exists a broad range of instance selection techniques \cite{arnaiz2018estudio}, that aim to improve the quality of the test data selection and therefore also the classification accuracy. Since the classification technique of choice was the KNN Algorithm, it seemed logical to use the Edited Nearest Neighbour Algorithm for the instance selection. This algorithm only considers those data points as representative for a class, that have their closest (configurable) neighbours in the same class. Using this approach, accuracy was boosted up to 90\% for \texttt{n=10}.
+After identifiying the relationship between the amount of training data and the value for \texttt{k} and therefore determining the best \texttt{k} for each \texttt{n} the highest accuracy achieved was around 50\%. However this result was only achieved by increasing \texttt{n} far beyond the numbers given in the task description. Therefore a suitable strategy for selecting the best \texttt{n} class members was desired. Research into this topic revealed, that there exists a broad range of instance selection techniques \cite{arnaiz2018estudio}, that aim to improve the quality of the test data selection and therefore also the classification accuracy. Since the classification technique of choice was the KNN Algorithm, it seemed logical to use the Edited Nearest Neighbour Algorithm for the instance selection. This algorithm only considers those data points as representative for a class, that have their closest (configurable) neighbours in the same class. The results for those experiments can be seen in \ref{exp3}, \ref{exp4} and \ref{exp5} 
 \onecolumn
 \section{results}
-\subsection*{without any tuning}
+The test results present the achieved accuracy score, given the corresponding parameters, described in each experiment. The number of neighbours was increased by two in each run and the effect observed for each number of class members
+\subsection{experiment 1}\label{exp1}
+\paragraph{description:}
+This experiment simply uses the first \texttt{n} class members for the training. No further tuning was attempted. See figure \ref{fig:no_tuning} and table \ref{tab:no_tuning}
+\paragraph{results:} It is clearly visible, that the accuracy increases, when more training data is provided
+\input{../output/no_tuning}
+\FloatBarrier
+\subsection{experiment 2}\label{exp2}
+\paragraph{description}
+In this experiment, principal component analysis (PCA) was enabled prior to training the classifier. The previously identified number of features (45) was used here.
+\subsubsection{experiment 2a}
+Here we are evaluating the effect of gradually increasing the amount of features used for training the classifier. The PCA implementation in scikit-learn will identify the features with the lowest entropy between the classes and will only return data, with a configurable amount of best features remaining. Prior to using PCA in the next experiment, the effect was observed for identifying the optimal value. 
+\subsubsection{experiment 2b}
+\paragraph{results:} In experiment 2a, the number of remaining features was found best to be around 45. There was no noticeable increase, when using more features for training the classifier. When enabled however, there was no noticeable difference in the achieved accuracy score, when applying PCA, prior to training the classifier, compared to not using it at all.
+\input{../output/pca_enabled}
+\FloatBarrier
+\subsection{experiment 3}\label{exp3}
+\paragraph{description}
+In this experiment, PCA and the edited nearest neighbour (ENN) instance selection were enabled. However, only the indices list of "good" class representatives was used. The test data also contains data points, which would have been removed by the ENN.
+\paragraph{results:}
+\input{../output/with_enn_with_pca}
+\FloatBarrier
+\subsection{experiment 4}\label{exp4}
+\paragraph{description:}
+\paragraph{results:}
+\input{../output/with_enn_without_pca}
+\FloatBarrier
+\subsection{experiment 5}\label{exp5}
+\paragraph{description}
+In this experiment , PCA was enabled, ENN was enabled and the output of ENN was used for testing as well.
+\paragraph{results}
+\input{../output/with_enn_with_pca_denoised}
 \twocolumn
 \section{evaluation}
+All experiments show, that increasing the amount of training data effectively increases the accuracy of the KNN classifier.
+The biggest impact, though, has the de-noising of the data, which makes sense insofar, that hardly classifiable data points are already removed by the ENN algorithm. However, practically, this method is probably not an option, since the aim of classification should be to classify unknown data, ideally with a high accuracy. 
 \bibliography{cite}
 \bibliographystyle{ieeetr}
 \end{document}
