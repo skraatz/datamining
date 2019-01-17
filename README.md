@@ -13,7 +13,7 @@ cd assignment1
 source bin/activate
 
 # if you don't have numpy and Pillow already installed on your machine
-pip install numpy, Pillow
+pip install numpy Pillow
 ```
 * put test image somewhere
 * run program
@@ -37,6 +37,10 @@ cd assignment2
 # for bash, etc
 source bin/activate
 
-pip install numpy, pandas, scikit-learn, scipy,  imbalanced-learn, 
+pip install numpy pandas scikit-learn scipy imbalanced-learn matplotlib 
+
+script usage: python test_sceleton.py 
+
+the script will produce the output data for all experiments described in the documentation and prepare latex files and plots for inclusion or review.
 
 ```
