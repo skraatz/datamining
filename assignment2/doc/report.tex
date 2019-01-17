@@ -7,77 +7,86 @@
 \usepackage{graphicx}
 \usepackage[section]{placeins}
 \author{Stefan Kraatz}
-\title{Assignment 2}
+\title{Foundations of Data Mining\\Assignment 2\\fdm-ws18-p1}
 \begin{document}
 \maketitle
-\section{task description}
+\onecolumn
+\section{Task description}
 This experiment targets the influence of the amount of training data on the accuracy of a predefined classification algorithm. For this purpose the nearest neighbour algorithm was chosen. The parameter for this algorithm, besides the selection of training data are:
 \begin{itemize}
 \item the amount of neighbours considered
 \item the cost function, that determines the weight of the nearest neighbours
 \end{itemize}
 The amount of training data to be used in this experiment is 3, 5, 10 members of each class. The feature vector consists of the image edge histogram data for each image and thus represents the shapes displayed on each image. Therefore using it as a class discriminator seems like a logical choice and has been attempted previously (e.g. in \cite{4610973})
-\section{experiment setup}
-\subsection*{implementation laguage and libraries}
+\section{Experiment setup}
+\subsection*{Implementation laguage and libraries}
 As an implementation language for this experiment, python was used. The choice was mainly influenced by the availability of many data mining functions, implemented in the well known scikit learn library. Besides scikit learn, the following auxiliary libraries where used, mainly due to dependencies of scikit learn and for ease of use in data handling: pandas and numpy.
-\subsection*{test data selection}
+\subsection*{Test data selection}
 The strategy for selecting the test data is yet to be improved, as of now, the first n representatives of each class where selected. However, removing all class representatives, that do not have enough (at least 3) nearest neighbours in the same class prior to the selection of the first n, greatly improved the result (see \ref{substune}).
-\subsection*{execution}
+\subsection*{Execution}
 The number of neighbours was gradually increased for each given amount of training data and the effect of distance based weight for the neighbour class was tested. Thus the parameter set for each test run was.
 \begin{itemize}
 \item the amount of training data
 \item the amount of neighbours
-\item the cost function (distance based bias or unbiased)
 \end{itemize}
-Each test run was initially executed 10 times. Due to the nature of the chosen algorithm, this did not yield varying results per repetition, and thus results for them were not recorded individually.
-\subsection{variations and tuning}\label{substune}
+Each test run was initially executed 10 times. Due to the nature of the chosen algorithm, this did not yield varying results per repetition, and thus results for them were not recorded individually. The effect of the cost function (distance based bias or unbiased) was tested first and the more ''attractive'' was chosen as default from then on. 
+\subsection{Variations and tuning}\label{substune}
+After initial test runs, it was decided to also evaluate the influence of the amount of feature points, that were used for testing. For reducing the feature vectors to the optimal set of feature points, the principal component analysis was used \cite{wold1987principal}. The useful number of features was evaluated with 10 members per class for training the classifier and the achieved accuracy for this observed. The idea behind this experiment is to check, if some feature values do not contribute to the classification (because they may be simply random) and \textit{may} be removed (e.g. to save computation time and memory for the classifier) or if some features may actually decrease the classification accuracy (because the data is unrelated but not random) and \textit{should} be removed to improve classification. However the latter case may not be detectable easily using this method.
+\paragraph*{test data selection}
+After identifiying the relationship between the amount of training data and the value for \texttt{k} and therefore determining the best \texttt{k} for each \texttt{n} the highest accuracy achieved was around 50\%. However this result was only achieved by increasing \texttt{n} far beyond the numbers given in the task description. Therefore a suitable strategy for selecting the best \texttt{n} class members was desired. Research into this topic revealed, that there exists a broad range of instance selection techniques \cite{arnaiz2018estudio}, that aim to improve the quality of the test data selection and therefore also the classification accuracy. Since the classification technique of choice was the KNN Algorithm, it seemed logical to use the Edited Nearest Neighbour Algorithm for the instance selection. This algorithm only considers those data points as representative for a class, that have their closest (configurable) neighbours in the same class. The results for those experiments can be seen in \ref{exp3}, \ref{exp4} and \ref{exp5} 
+\section{Results}
+The test results present the achieved accuracy score, given the corresponding parameters, described in each experiment. The number of neighbours was increased by two in each run and the effect observed for each number of class members
+\subsection{Experiment 1}\label{exp1}
+This setup observes the effect of the (distance)weight function to a otherwise not tuned classifier.
+\subsubsection{Experiment 1a}
+\paragraph{description:}
+This experiment simply uses the first \texttt{n} class members for the training. No further tuning was attempted. See figure \ref{fig:no_tuning,_no_weight_function} and table \ref{tab:no_tuning,_no_weight_function}
+\paragraph{results:} It is clearly visible, that the accuracy increases, when more training data is provided.
+\input{../output/no_tuning,_no_weight_function}
+\FloatBarrier
+\subsubsection{Experiment 1b}\label{exp1}
+\paragraph{description:}
+This experiment adds the weight function to the classifier. See figure \ref{fig:no_tuning,_with_weight_function} and table \ref{tab:no_tuning,_with_weight_function}
+\paragraph{results:} Adding the weight function clearly raises the accuracy score compared to experiment 1a. Therefore all following experiments will have the distance weight function enabled by default.
+\input{../output/no_tuning,_with_weight_function}
+\FloatBarrier
+\subsection{Experiment 2}\label{exp2}
+\paragraph{description}
+In this experiment, principal component analysis (PCA) was enabled prior to training the classifier. The previously identified number of features (45) was used here.
+\subsubsection{Experiment 2a}
 \paragraph*{feature reduction}
 \begin{figure}[htbp]
+\centering
 \includegraphics[scale=0.4]{../output/pca_tune.png}
 \caption{influence of \# num features}
 \label{fig:numfeatures}
 \end{figure}
-After initial test runs, it was decided to also evaluate the influence of the amount of feature points, that were used for testing. For reducing the feature vectors to the optimal set of feature points, the principal component analysis was used \cite{wold1987principal}. The useful number of features was evaluated with 10 members per class for training the classifier and the achieved accuracy for this observed. 
-\paragraph*{test data selection}
-After identifiying the relationship between the amount of training data and the value for \texttt{k} and therefore determining the best \texttt{k} for each \texttt{n} the highest accuracy achieved was around 50\%. However this result was only achieved by increasing \texttt{n} far beyond the numbers given in the task description. Therefore a suitable strategy for selecting the best \texttt{n} class members was desired. Research into this topic revealed, that there exists a broad range of instance selection techniques \cite{arnaiz2018estudio}, that aim to improve the quality of the test data selection and therefore also the classification accuracy. Since the classification technique of choice was the KNN Algorithm, it seemed logical to use the Edited Nearest Neighbour Algorithm for the instance selection. This algorithm only considers those data points as representative for a class, that have their closest (configurable) neighbours in the same class. The results for those experiments can be seen in \ref{exp3}, \ref{exp4} and \ref{exp5} 
-\onecolumn
-\section{results}
-The test results present the achieved accuracy score, given the corresponding parameters, described in each experiment. The number of neighbours was increased by two in each run and the effect observed for each number of class members
-\subsection{experiment 1}\label{exp1}
-\paragraph{description:}
-This experiment simply uses the first \texttt{n} class members for the training. No further tuning was attempted. See figure \ref{fig:no_tuning} and table \ref{tab:no_tuning}
-\paragraph{results:} It is clearly visible, that the accuracy increases, when more training data is provided
-\input{../output/no_tuning}
-\FloatBarrier
-\subsection{experiment 2}\label{exp2}
-\paragraph{description}
-In this experiment, principal component analysis (PCA) was enabled prior to training the classifier. The previously identified number of features (45) was used here.
-\subsubsection{experiment 2a}
 Here we are evaluating the effect of gradually increasing the amount of features used for training the classifier. The PCA implementation in scikit-learn will identify the features with the lowest entropy between the classes and will only return data, with a configurable amount of best features remaining. Prior to using PCA in the next experiment, the effect was observed for identifying the optimal value. 
-\subsubsection{experiment 2b}
-\paragraph{results:} In experiment 2a, the number of remaining features was found best to be around 45. There was no noticeable increase, when using more features for training the classifier. When enabled however, there was no noticeable difference in the achieved accuracy score, when applying PCA, prior to training the classifier, compared to not using it at all.
+\subsubsection{Experiment 2b}
+\paragraph{results:} In experiment 2a, the number of remaining features was found best to be around 45. There was no noticeable increase, when using more features for training the classifier (see figure \ref{fig:numfeatures}). When enabled however, there was no noticeable difference in the achieved accuracy score, when applying PCA, prior to training the classifier, compared to not using it at all. (see table \ref{tab:pca_enabled} and figure \ref{fig:pca_enabled})
 \input{../output/pca_enabled}
 \FloatBarrier
-\subsection{experiment 3}\label{exp3}
+\subsection{Experiment 3}\label{exp3}
 \paragraph{description}
 In this experiment, PCA and the edited nearest neighbour (ENN) instance selection were enabled. However, only the indices list of "good" class representatives was used. The test data also contains data points, which would have been removed by the ENN.
-\paragraph{results:}
+\paragraph{results:} The results are practically unchanged from those found in experiment 2.
 \input{../output/with_enn_with_pca}
 \FloatBarrier
-\subsection{experiment 4}\label{exp4}
-\paragraph{description:}
-\paragraph{results:}
+\subsection{Experiment 4}\label{exp4}
+\paragraph{description:} for cross checking the effect of using ENN without the principal component analysis was also tested.
+\paragraph{results:} Again, the results are practically unchanged from those found in experiment 2.
 \input{../output/with_enn_without_pca}
 \FloatBarrier
-\subsection{experiment 5}\label{exp5}
-\paragraph{description}
-In this experiment , PCA was enabled, ENN was enabled and the output of ENN was used for testing as well.
-\paragraph{results}
+\subsection{Experiment 5}\label{exp5}
+\paragraph{description:}
+In this experiment, PCA was enabled, ENN was enabled and the output of ENN was used for testing as well. This tests how good data points from the "denoised" data set are classified, after using a small subset from it as training data. The overall amount of data was reduced to around 3.500 from almost 10.000 data points. This already shows, that the biggest amount of data is not easily classifiable using the KNN classifier.
+\paragraph{results:}
+At the first glance, the results seem very promising, reaching accuracy scores of almost 90\% for the series with 10 training candidates. However, when considering the conditions for this result, this is easily explainable. One observation can be made here: Increasing the amount of k for the KNN classifier decreases the accuracy score more strongly than it did in the previous experiments. This may be the result of the removal of the ''noise'', making it more likely that more neighbours may be from a different class.
 \input{../output/with_enn_with_pca_denoised}
-\twocolumn
-\section{evaluation}
+\section{Evaluation}
 All experiments show, that increasing the amount of training data effectively increases the accuracy of the KNN classifier.
-The biggest impact, though, has the de-noising of the data, which makes sense insofar, that hardly classifiable data points are already removed by the ENN algorithm. However, practically, this method is probably not an option, since the aim of classification should be to classify unknown data, ideally with a high accuracy. 
+The biggest impact, though, has the de-noising of the data, which makes sense insofar, that hardly classifiable data points are already removed by the ENN algorithm. However, practically, this method is probably not an option, since the aim of classification should be to classify unknown data, ideally with a high accuracy. In conclusion it can be said, that the KNN algorithm is not very efficient on the edge histogram data. This seems logical, as shape data may be similar locally but different in another location, potentially making it difficult to decide purely on distance in a large dimensional space, if images are similar or not.However, an accuracy of almost 50\%, may under these circumstances be quite sufficient results, though, considering the amount of classes.
 \bibliography{cite}
 \bibliographystyle{ieeetr}
+\twocolumn
 \end{document}

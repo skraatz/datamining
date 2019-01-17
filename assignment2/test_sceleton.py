@@ -6,6 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn import neighbors
 from sklearn.metrics import accuracy_score
+from sklearn import tree
 
 import warnings
 # suppresses this message : FutureWarning: From version 0.21, test_size will always
@@ -62,7 +63,7 @@ def testrun(data, clf=DEFAULT_CLASSIFIER, class_rep_count=3, pca=None):
     return accuracy_score(test_target, y_pred)
 
 
-def experiment(data, pca, repeats, exp_name):
+def experiment(data, pca, repeats, exp_name, weightfunction='distance'):
     print("################################")
     print("running experiment " + exp_name)
     print("################################")
@@ -72,7 +73,7 @@ def experiment(data, pca, repeats, exp_name):
         for n in neighbour_axis:
             total = 0
             for r in range(repeats):
-                cls = neighbors.KNeighborsClassifier(n, weights='distance')
+                cls = neighbors.KNeighborsClassifier(n, weights=weightfunction)
                 test_result = crp, n, testrun(data, cls, crp, pca)
                 print(test_result)
                 _, _, acc = test_result
@@ -106,6 +107,28 @@ def get_optimal_pca_parm(data, exp_name):
     numpy.savetxt(out_path + exp_name + ".csv", numpy.array(test_results), header=header, delimiter=';')
 
 
+def decision_tree_comparison(data, exp_name):
+    print("################################")
+    print("running experiment " + exp_name)
+    print("################################")
+    clf = tree.DecisionTreeClassifier(max_depth=15, criterion='entropy', min_impurity_split=1e-6)
+    feature_data, target, target_names, indices = data
+
+    test_data, test_target, training_data, training_target = \
+        prepare_data(feature_data, target, target_names, indices, count=10)
+
+    pca = PCA(n_components=25)
+
+    training_data = pca.fit_transform(training_data)
+    test_data = pca.transform(test_data)
+
+    clf = clf.fit(training_data, training_target)
+    y_pred = clf.predict(test_data)
+    acc = accuracy_score(test_target, y_pred)
+    print("achieved accuracy: " + str(acc))
+    return acc
+
+
 # main program
 if __name__ == "__main__":
     plot_enabled = DEFAULT_PLOT_ENABLED
@@ -119,15 +142,15 @@ if __name__ == "__main__":
         data = load_data(image_path, hist_path, with_enn=False, denoise=False)
         get_optimal_pca_parm(data, "pca_tune")
 
-        if plot_enabled:
-            create_output(out_path)
-
-"""
         repeats = 1
         # without edited nearest neighbours
         data = load_data(image_path, hist_path, with_enn=False)
+
         pca = None
-        experiment(data, pca, repeats, "no_tuning")
+        experiment(data, pca, repeats, "no_tuning,_with_weight_function")
+
+        # for comparison, with a uniform weight for all n neighbours
+        experiment(data, pca, repeats, "no_tuning,_no_weight_function", weightfunction='uniform')
 
         data = load_data(image_path, hist_path, with_enn=False)
         pca = PCA(n_components=DEFAULT_PCA_NCOMPONENTS)
@@ -145,4 +168,7 @@ if __name__ == "__main__":
         data = load_data(image_path, hist_path, with_enn=True, denoise=True)
         pca = PCA(n_components=DEFAULT_PCA_NCOMPONENTS)
         experiment(data, pca, repeats, "with_enn_with_pca_denoised")
-"""
+
+        if plot_enabled:
+            create_output(out_path)
+

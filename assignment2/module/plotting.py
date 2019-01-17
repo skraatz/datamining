@@ -49,14 +49,20 @@ def make_latex_output(filehandle, file_name):
     texfile.write("\\captionsetup{type=table}\n")
     texfile.write("\\begin{tabular}{|c||c|c|c|c|c|c|c|}\n")
     texfile.write("\\hline\n")
-    texfile.write(" & \multicolumn{7}{c|}{number of neighbours} \\\\ \n ")
+    texfile.write(" & \multicolumn{7}{c|}{number of neighbours (\\texttt{k})} \\\\ \n ")
     texfile.write("\\hline\n\\hline\n")
     texfile.write("\\texttt{n} & 2 & 4 & 6 & 8 & 10 & 12 & 14 \\\\ \n ")
     texfile.write("\\hline\n")
     counter = 0
+
+    acc_max = float(0)
+    acc_min = float(100)
+
     for row in experiment_data:
         line = str(training_members_per_class[counter])
         for data in row:
+            acc_max = max(acc_max, data)
+            acc_min = min(acc_min, data)
             line += " & " + str(data)
         line += " \\\\ \n"
         texfile.write(line)
@@ -65,9 +71,12 @@ def make_latex_output(filehandle, file_name):
     texfile.write("\\end{tabular}\n")
     texfile.write("\\caption{" + capstring + "}\n")
     texfile.write("\\label{tab:" + file_name + "}\n")
+    texfile.write("~\\\\\n")
+    texfile.write("$acc_{min} = " + str(acc_min) + "\\\\ acc_{max} = " + str(acc_max) + "$")
     texfile.write("\\end{minipage}\n")
     texfile.write("\\begin{minipage}{0.3\\textwidth}\n")
     texfile.write("\\centering\n")
+    texfile.write("\\captionsetup{justification=raggedright}\n")
     texfile.write("\\includegraphics[scale=0.39]{../output/" + file_name + ".png}\n")
     texfile.write("\\caption{"+ capstring + "}\n")
     texfile.write("\\label{fig:" + file_name + "}\n")
