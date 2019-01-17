@@ -2,7 +2,6 @@
 
 import sys
 import os
-from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn import neighbors
 from sklearn.metrics import accuracy_score
@@ -16,14 +15,6 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 sys.path.append(os.getcwd()+"/module")
 from data_functions import *
 from plotting import *
-
-
-def printhelp():
-    helpstring = "script usage: python test_sceleton.py [plot]\n"
-    helpstring = helpstring + "example 1 (no plotting): python test_sceleton.py \n"
-    helpstring = helpstring + "example 2 (with plotting: python test_sceleton.py plot\n"
-    print(helpstring)
-
 
 image_path = os.getcwd() + "/data/Images.csv"
 hist_path = os.getcwd() + "/data/EdgeHistogram.csv"
@@ -45,10 +36,6 @@ def testrun(data, clf=DEFAULT_CLASSIFIER, class_rep_count=3, pca=None):
 
     test_data, test_target, training_data, training_target = \
         prepare_data(feature_data, target, target_names, indices, class_rep_count)
-
-    sc = StandardScaler()
-    training_data = sc.fit_transform(training_data)
-    test_data = sc.transform(test_data)
 
     # run principal component analysis and only chose the n_components most important features
     if pca is not None:
@@ -131,44 +118,35 @@ def decision_tree_comparison(data, exp_name):
 
 # main program
 if __name__ == "__main__":
-    plot_enabled = DEFAULT_PLOT_ENABLED
+    data = load_data(image_path, hist_path, with_enn=False, denoise=False)
+    get_optimal_pca_parm(data, "pca_tune")
 
-    if len(sys.argv) < 2 or sys.argv[1] in ["h", "-h", "-help"]:
-        printhelp()
-    else:
-        if sys.argv[1] == "plot":
-            plot_enabled = True
+    repeats = 1
+    # without edited nearest neighbours
+    data = load_data(image_path, hist_path, with_enn=False)
 
-        data = load_data(image_path, hist_path, with_enn=False, denoise=False)
-        get_optimal_pca_parm(data, "pca_tune")
+    pca = None
+    experiment(data, pca, repeats, "no_tuning,_with_weight_function")
 
-        repeats = 1
-        # without edited nearest neighbours
-        data = load_data(image_path, hist_path, with_enn=False)
+    # for comparison, with a uniform weight for all n neighbours
+    experiment(data, pca, repeats, "no_tuning,_no_weight_function", weightfunction='uniform')
 
-        pca = None
-        experiment(data, pca, repeats, "no_tuning,_with_weight_function")
+    data = load_data(image_path, hist_path, with_enn=False)
+    pca = PCA(n_components=DEFAULT_PCA_NCOMPONENTS)
+    experiment(data, pca, repeats, "pca_enabled")
 
-        # for comparison, with a uniform weight for all n neighbours
-        experiment(data, pca, repeats, "no_tuning,_no_weight_function", weightfunction='uniform')
+    # with edited nearest neighbours enabled
+    data = load_data(image_path, hist_path, with_enn=True)
+    pca = None
+    experiment(data, pca, repeats, "with_enn_without_pca")
 
-        data = load_data(image_path, hist_path, with_enn=False)
-        pca = PCA(n_components=DEFAULT_PCA_NCOMPONENTS)
-        experiment(data, pca, repeats, "pca_enabled")
+    data = load_data(image_path, hist_path, with_enn=True)
+    pca = PCA(n_components=DEFAULT_PCA_NCOMPONENTS)
+    experiment(data, pca, repeats, "with_enn_with_pca")
 
-        # with edited nearest neighbours enabled
-        data = load_data(image_path, hist_path, with_enn=True)
-        pca = None
-        experiment(data, pca, repeats, "with_enn_without_pca")
+    data = load_data(image_path, hist_path, with_enn=True, denoise=True)
+    pca = PCA(n_components=DEFAULT_PCA_NCOMPONENTS)
+    experiment(data, pca, repeats, "with_enn_with_pca_denoised")
 
-        data = load_data(image_path, hist_path, with_enn=True)
-        pca = PCA(n_components=DEFAULT_PCA_NCOMPONENTS)
-        experiment(data, pca, repeats, "with_enn_with_pca")
-
-        data = load_data(image_path, hist_path, with_enn=True, denoise=True)
-        pca = PCA(n_components=DEFAULT_PCA_NCOMPONENTS)
-        experiment(data, pca, repeats, "with_enn_with_pca_denoised")
-
-        if plot_enabled:
-            create_output(out_path)
+    create_output(out_path)
 

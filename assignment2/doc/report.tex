@@ -69,19 +69,19 @@ Here we are evaluating the effect of gradually increasing the amount of features
 \subsection{Experiment 3}\label{exp3}
 \paragraph{description}
 In this experiment, PCA and the edited nearest neighbour (ENN) instance selection were enabled. However, only the indices list of "good" class representatives was used. The test data also contains data points, which would have been removed by the ENN.
-\paragraph{results:} The results are practically unchanged from those found in experiment 2.
+\paragraph{results:} The results are at the first glance unchanged from those found in experiment 2. However, there are some subtle differences, the values seem more compressed and generally slightly higher than previously except for the maximum values. It is also notable, that the accuracy is now inversely sensitive to a growing \texttt{k}.
 \input{../output/with_enn_with_pca}
 \FloatBarrier
 \subsection{Experiment 4}\label{exp4}
 \paragraph{description:} for cross checking the effect of using ENN without the principal component analysis was also tested.
-\paragraph{results:} Again, the results are practically unchanged from those found in experiment 2.
+\paragraph{results:} These results are practically unchanged from those found in experiment 3.
 \input{../output/with_enn_without_pca}
 \FloatBarrier
 \subsection{Experiment 5}\label{exp5}
 \paragraph{description:}
 In this experiment, PCA was enabled, ENN was enabled and the output of ENN was used for testing as well. This tests how good data points from the "denoised" data set are classified, after using a small subset from it as training data. The overall amount of data was reduced to around 3.500 from almost 10.000 data points. This already shows, that the biggest amount of data is not easily classifiable using the KNN classifier.
 \paragraph{results:}
-At the first glance, the results seem very promising, reaching accuracy scores of almost 90\% for the series with 10 training candidates. However, when considering the conditions for this result, this is easily explainable. One observation can be made here: Increasing the amount of k for the KNN classifier decreases the accuracy score more strongly than it did in the previous experiments. This may be the result of the removal of the ''noise'', making it more likely that more neighbours may be from a different class.
+At the first glance, the results seem very promising, reaching accuracy scores of almost 90\% for the series with 10 training candidates. However, when considering the conditions for this result, this is easily explainable. One observation can also be made here: Increasing the amount of k for the KNN classifier decreases the accuracy score more strongly than it did in the previous experiments. This may be the result of the removal of the ''noise'', making it more likely that more neighbours may be from a different class.
 \input{../output/with_enn_with_pca_denoised}
 \section{Evaluation}
 All experiments show, that increasing the amount of training data effectively increases the accuracy of the KNN classifier.
